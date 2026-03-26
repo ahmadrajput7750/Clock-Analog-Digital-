@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultimate Glass Clock</title>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+body {
+    background: linear-gradient(-45deg, #1e3a8a, #9333ea, #0ea5e9, #6366f1);
+    background-size: 400% 400%;
+    animation: gradient 10s ease infinite;
+}
+
+@keyframes gradient {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
+}
+
+.clock-hand {
+    transform-origin: bottom;
+}
+</style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center text-white">
+
+<div class="backdrop-blur-lg bg-white/10 border border-white/20 
+rounded-2xl shadow-2xl p-8 w-[380px] text-center space-y-6">
+
+<h1 class="text-2xl font-bold">Ultimate Glass Clock</h1>
+
+<!-- Digital Clock -->
+<div id="digital" class="text-3xl font-bold"></div>
+<div id="date" class="text-sm opacity-80"></div>
+
+<!-- Analog Clock -->
+<div class="relative w-40 h-40 mx-auto border-4 border-white/40 rounded-full">
+    <div id="hour" class="clock-hand absolute w-1 h-12 bg-white left-1/2 bottom-1/2"></div>
+    <div id="minute" class="clock-hand absolute w-1 h-16 bg-white left-1/2 bottom-1/2"></div>
+    <div id="second" class="clock-hand absolute w-0.5 h-20 bg-red-400 left-1/2 bottom-1/2"></div>
+</div>
+
+<!-- Timezone -->
+<select id="timezone" class="bg-white/20 rounded p-2 text-black w-full">
+<option value="local">Local Time</option>
+<option value="UTC">UTC</option>
+<option value="Asia/Karachi">Pakistan</option>
+<option value="America/New_York">New York</option>
+<option value="Europe/London">London</option>
+</select>
+
+<!-- Dark Toggle -->
+<button onclick="toggleMode()" 
+class="bg-white/20 px-4 py-2 rounded hover:bg-white/30">
+Toggle Dark/Light
+</button>
+
+<!-- Alarm -->
+<div>
+<input type="time" id="alarmTime" class="text-black p-2 rounded">
+<button onclick="setAlarm()" class="bg-green-500 px-3 py-2 rounded">
+Set Alarm
+</button>
+</div>
+
+<!-- Stopwatch -->
+<div>
+<div id="stopwatch" class="text-xl">00:00:00</div>
+<button onclick="startStopwatch()" class="bg-blue-500 px-2 py-1 rounded">Start</button>
+<button onclick="stopStopwatch()" class="bg-yellow-500 px-2 py-1 rounded">Stop</button>
+<button onclick="resetStopwatch()" class="bg-red-500 px-2 py-1 rounded">Reset</button>
+</div>
+
+<!-- Timer -->
+<div>
+<input type="number" id="timerInput" placeholder="Seconds" 
+class="text-black p-2 rounded w-full">
+<button onclick="startTimer()" class="bg-purple-500 px-3 py-2 rounded mt-2">
+Start Timer
+</button>
+<div id="timerDisplay" class="mt-2"></div>
+</div>
+
+</div>
+
+<script>
+// DIGITAL + ANALOG CLOCK
+function updateClock(){
+    let now = new Date();
+    let timezone = document.getElementById("timezone").value;
+
+    if(timezone !== "local"){
+        now = new Date(now.toLocaleString("en-US", {timeZone: timezone}));
+    }
+
+    let h = now.getHours();
+    let m = now.getMinutes();
+    let s = now.getSeconds();
+
+    let ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+
+    document.getElementById("digital").innerHTML =
+        `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} ${ampm}`;
+
+    document.getElementById("date").innerHTML =
+        now.toDateString();
+
+    // Analog
+    document.getElementById("hour").style.transform =
+        `rotate(${h*30 + m/2}deg)`;
+    document.getElementById("minute").style.transform =
+        `rotate(${m*6}deg)`;
+    document.getElementById("second").style.transform =
+        `rotate(${s*6}deg)`;
+
+    checkAlarm(h, m);
+}
+
+setInterval(updateClock,1000);
+updateClock();
+
+// DARK MODE
+function toggleMode(){
+    document.body.classList.toggle("bg-black");
+}
+
+// ALARM
+let alarmTimeValue = null;
+
+function setAlarm(){
+    alarmTimeValue = document.getElementById("alarmTime").value;
+    alert("Alarm Set!");
+}
+
+function checkAlarm(h,m){
+    if(alarmTimeValue){
+        let [ah,am] = alarmTimeValue.split(":");
+        if(parseInt(ah)%12 === h && parseInt(am) === m){
+            alert("⏰ Alarm Ringing!");
+            alarmTimeValue = null;
+        }
+    }
+}
+
+// STOPWATCH
+let swInterval;
+let swSeconds = 0;
+
+function startStopwatch(){
+    swInterval = setInterval(()=>{
+        swSeconds++;
+        let hrs = Math.floor(swSeconds/3600);
+        let mins = Math.floor((swSeconds%3600)/60);
+        let secs = swSeconds%60;
+        document.getElementById("stopwatch").innerHTML =
+            `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+    },1000);
+}
+
+function stopStopwatch(){
+    clearInterval(swInterval);
+}
+
+function resetStopwatch(){
+    clearInterval(swInterval);
+    swSeconds = 0;
+    document.getElementById("stopwatch").innerHTML="00:00:00";
+}
+
+// TIMER
+function startTimer(){
+    let seconds = document.getElementById("timerInput").value;
+    let display = document.getElementById("timerDisplay");
+
+    let interval = setInterval(()=>{
+        if(seconds<=0){
+            clearInterval(interval);
+            display.innerHTML="⏳ Time's Up!";
+            return;
+        }
+        display.innerHTML=seconds+" seconds left";
+        seconds--;
+    },1000);
+}
+</script>
+
+</body>
+</html>
